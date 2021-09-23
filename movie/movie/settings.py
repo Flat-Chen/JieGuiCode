@@ -52,7 +52,8 @@ DOWNLOAD_DELAY = 0
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'movie.middlewares.MovieDownloaderMiddleware': 543,
+    'movie.middlewares.ProxyMiddleware': 200,
+    'movie.middlewares.RotateUserAgentMiddleware': 201,
 }
 
 # Enable or disable extensions
@@ -100,4 +101,3 @@ MONGODB_DB = 'test'
 MONGODB_COLLECTION = 'test'
 WEBSITE = 'meiju'
 LOG_LEVEL = 'DEBUG'
-
