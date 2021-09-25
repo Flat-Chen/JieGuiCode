@@ -2,10 +2,10 @@
 #
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+import random
+
 import requests
 from scrapy import signals
-import random
-# useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
 from scrapy.downloadermiddlewares.useragent import UserAgentMiddleware
 
@@ -53,7 +53,7 @@ class ProxyMiddleware(object):
         return response
 
 
-class MovieSpiderMiddleware:
+class NewcarWangSpiderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the spider middleware does not modify the
     # passed objects.
@@ -100,7 +100,7 @@ class MovieSpiderMiddleware:
         spider.logger.info('Spider opened: %s' % spider.name)
 
 
-class MovieDownloaderMiddleware:
+class NewcarWangDownloaderMiddleware:
     # Not all methods need to be defined. If a method is not defined,
     # scrapy acts as if the downloader middleware does not modify the
     # passed objects.

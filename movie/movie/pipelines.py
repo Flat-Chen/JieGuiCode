@@ -36,7 +36,6 @@ class MoviePipeline:
             settings['MONGODB_PORT']
         )
         db = self.connection[settings['MONGODB_DB']]
-        website = settings["WEBSITE"]
         self.collection = db[settings['MONGODB_COLLECTION']]
         # count
         self.mysqlcounts = 0
@@ -85,7 +84,7 @@ class MoviePipeline:
                             level=logging.INFO)
                 return item
         # mongo不需要去重的爬虫名字写进去
-        elif spider.name in ["", " "]:
+        elif spider.name in ["meiju", "yichezhi"]:
             self.collection.insert(dict(item))
             logging.log(msg="Car added to MongoDB database!", level=logging.INFO)
             self.counts += 1

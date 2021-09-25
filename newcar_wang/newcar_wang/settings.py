@@ -1,4 +1,4 @@
-# Scrapy settings for movie project
+# Scrapy settings for newcar_wang project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -7,26 +7,24 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-BOT_NAME = 'movie'
+BOT_NAME = 'newcar_wang'
 
-SPIDER_MODULES = ['movie.spiders']
-NEWSPIDER_MODULE = 'movie.spiders'
+SPIDER_MODULES = ['newcar_wang.spiders']
+NEWSPIDER_MODULE = 'newcar_wang.spiders'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-# USER_AGENT = 'movie (+http://www.yourdomain.com)'
+# USER_AGENT = 'newcar_wang (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = False
+ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-# 并发数
 CONCURRENT_REQUESTS = 32
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-# 延迟
-DOWNLOAD_DELAY = 0
+# DOWNLOAD_DELAY = 3
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
 # CONCURRENT_REQUESTS_PER_IP = 16
@@ -38,22 +36,22 @@ DOWNLOAD_DELAY = 0
 # TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-# DEFAULT_REQUEST_HEADERS = {
-#   'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-#   'Accept-Language': 'en',
-# }
+DEFAULT_REQUEST_HEADERS = {
+    'Referer': 'https://car.autohome.com.cn/',
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.121 Safari/537.36"
+}
 
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 # SPIDER_MIDDLEWARES = {
-#    'movie.middlewares.MovieSpiderMiddleware': 543,
+#    'newcar_wang.middlewares.NewcarWangSpiderMiddleware': 543,
 # }
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-    'movie.middlewares.ProxyMiddleware': 200,
-    # 'movie.middlewares.RotateUserAgentMiddleware': 201,
+    # 'newcar_wang.middlewares.RotateUserAgentMiddleware': 200,
+    'newcar_wang.middlewares.ProxyMiddleware': 100,
 }
 
 # Enable or disable extensions
@@ -64,9 +62,9 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-    'movie.pipelines.MoviePipeline': 100,
-}
+# ITEM_PIPELINES = {
+#    'newcar_wang.pipelines.NewcarWangPipeline': 300,
+# }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
@@ -86,23 +84,5 @@ ITEM_PIPELINES = {
 # HTTPCACHE_ENABLED = True
 # HTTPCACHE_EXPIRATION_SECS = 0
 # HTTPCACHE_DIR = 'httpcache'
-# HTTPCACHE_IGNORE_HTTP_CODES = [403]
+# HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
-
-MYSQL_SERVER = "localhost"
-MYSQL_USER = "root"
-MYSQL_PWD = " "
-MYSQL_PORT = 3306
-MYSQL_DB = "test"
-MYSQL_TABLE = "test"
-MONGODB_SERVER = 'localhost'
-MONGODB_PORT = 27017
-MONGODB_DB = 'test'
-MONGODB_COLLECTION = 'yichezhi'
-LOG_LEVEL = 'DEBUG'
-
-RETRY_HTTP_CODES = [400, 403, 404, 408]
-# 是否开启重试
-RETRY_ENABLED = True
-# 重试次数
-RETRY_TIMES = 5
