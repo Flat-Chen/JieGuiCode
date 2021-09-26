@@ -17,17 +17,17 @@ NEWSPIDER_MODULE = 'GuaZi.spiders'
 #USER_AGENT = 'GuaZi (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 10
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY = 3
+DOWNLOAD_DELAY = 2
 # The download delay setting will honor only one of:
-#CONCURRENT_REQUESTS_PER_DOMAIN = 16
+# CONCURRENT_REQUESTS_PER_DOMAIN = 16
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
@@ -44,9 +44,9 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    'GuaZi.middlewares.GuaziSpiderMiddleware': 543,
-#}
+SPIDER_MIDDLEWARES = {
+   'GuaZi.middlewares.GuaziSpiderMiddleware': 200,
+}
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
@@ -62,9 +62,9 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'GuaZi.pipelines.GuaziPipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'GuaZi.pipelines.GuaziPipeline': 200,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
@@ -86,3 +86,20 @@ ROBOTSTXT_OBEY = True
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+MYSQL_SERVER = "localhost"
+MYSQL_USER = "root"
+MYSQL_PWD = " "
+MYSQL_PORT = 3306
+MYSQL_DB = "test"
+MYSQL_TABLE = "test"
+MONGODB_SERVER = '192.168.2.149'
+MONGODB_PORT = 27017
+MONGODB_DB = 'yiche'
+MONGODB_COLLECTION = 'yichezhi_rank'
+LOG_LEVEL = 'DEBUG'
+
+RETRY_HTTP_CODES = [400, 403, 404, 408]
+# 是否开启重试
+RETRY_ENABLED = True
+# 重试次数
+RETRY_TIMES = 5
