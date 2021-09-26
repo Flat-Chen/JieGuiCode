@@ -20,7 +20,7 @@ ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # 并发数
-CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 64
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
@@ -95,10 +95,10 @@ MYSQL_PWD = " "
 MYSQL_PORT = 3306
 MYSQL_DB = "test"
 MYSQL_TABLE = "test"
-MONGODB_SERVER = 'localhost'
+MONGODB_SERVER = '192.168.2.149'
 MONGODB_PORT = 27017
-MONGODB_DB = 'test'
-MONGODB_COLLECTION = 'yichezhi'
+MONGODB_DB = 'yiche'
+MONGODB_COLLECTION = 'yichezhi_rank'
 LOG_LEVEL = 'DEBUG'
 
 RETRY_HTTP_CODES = [400, 403, 404, 408]
