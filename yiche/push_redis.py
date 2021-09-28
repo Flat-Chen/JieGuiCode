@@ -1,5 +1,5 @@
 import json
-
+from tqdm import tqdm
 import pymongo
 import redis
 
@@ -498,7 +498,7 @@ print('剩余的任务有: ' + str(len(lost_data)))
 
 redis_url = 'redis://192.168.2.149:6379/6'
 r = redis.Redis.from_url(redis_url, decode_responses=True)
-for i in list(lost_data):
+for i in tqdm(list(lost_data)):
     r.lpush('yichezhi:post_data', i)
 
 

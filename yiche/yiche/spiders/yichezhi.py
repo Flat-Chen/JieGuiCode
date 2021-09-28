@@ -493,33 +493,36 @@ class YichezhiSpider(scrapy.Spider):
         redis_url = 'redis://192.168.2.149:6379/6'
         r = redis.Redis.from_url(redis_url, decode_responses=True)
         while 1:
-            post_data_json = r.blpop('yichezhi:post_data')
-            post_data_dict = json.loads(post_data_json[1])
-
-            date = post_data_dict['date']
-            area = str(post_data_dict['area']).replace("'", '"')
             try:
-                carLevel = str(post_data_dict['carLevel']).replace("'", '"')
+                post_data_json = r.blpop('yichezhi:post_data')
+                post_data_dict = json.loads(post_data_json[1])
+
+                date = post_data_dict['date']
+                area = str(post_data_dict['area']).replace("'", '"')
+                try:
+                    carLevel = str(post_data_dict['carLevel']).replace("'", '"')
+                except:
+                    carLevel = None
+                type_code = str(post_data_dict['type'])
+
+                data = {
+                    "date": date,
+                    "area": eval(area),
+                    "carLevel": eval(carLevel),
+                    "type": eval(type_code)
+                }
+                meta = {
+                    'page_type': type_dict[type_code],
+                    'city': city_dict[area],
+                    'date': date,
+                    'model_type': model_dict[carLevel],
+                    'post_data': data
+                }
+
+                yield scrapy.Request(url=url, method='POST', body=json.dumps(data), meta=meta,
+                                     dont_filter=True, headers={'Content-Type': 'application/json'})
             except:
-                carLevel = None
-            type_code = str(post_data_dict['type'])
-
-            data = {
-                "date": date,
-                "area": eval(area),
-                "carLevel": eval(carLevel),
-                "type": eval(type_code)
-            }
-            meta = {
-                'page_type': type_dict[type_code],
-                'city': city_dict[area],
-                'date': date,
-                'model_type': model_dict[carLevel],
-                'post_data': data
-            }
-
-            yield scrapy.Request(url=url, method='POST', body=json.dumps(data), meta=meta,
-                                 dont_filter=True, headers={'Content-Type': 'application/json'})
+                continue
 
     def parse(self, response):
         page_type = response.meta['page_type']
@@ -538,5 +541,5 @@ class YichezhiSpider(scrapy.Spider):
         item['post_data'] = post_data
         item['content'] = response.text
         item['grab_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        yield
+        yield item
 
