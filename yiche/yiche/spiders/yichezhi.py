@@ -1,8 +1,9 @@
 import json
+import time
 
 import pymongo
+import redis
 import scrapy
-import time
 
 type_dict = {
     '0': '品牌销量',
@@ -461,99 +462,49 @@ class YichezhiSpider(scrapy.Spider):
 
     # start_urls = ['http://yichehuoban.cn/']
 
+    @classmethod
+    def update_settings(cls, settings):
+        settings.setdict(
+            getattr(cls, 'custom_debug_settings' if getattr(cls, 'is_debug', False) else 'custom_settings', None) or {},
+            priority='spider')
+
+    is_debug = True
+    custom_debug_settings = {
+        'MYSQL_SERVER': '192.168.1.94',
+        'MYSQL_USER': "dataUser94",
+        'MYSQL_PWD': "94dataUser@2020",
+        'MYSQL_PORT': 3306,
+        'MYSQL_DB': 'yiche',
+        'MYSQL_TABLE': 'yichezhi',
+        'MONGODB_SERVER': '192.168.2.149',
+        'MONGODB_PORT': 27017,
+        'MONGODB_DB': 'yiche',
+        'MONGODB_COLLECTION': 'yichezhi_rank',
+        'CONCURRENT_REQUESTS': 8,
+        'DOWNLOAD_DELAY': 0,
+        'LOG_LEVEL': 'DEBUG',
+        'RETRY_HTTP_CODES': [400, 403, 404, 408],
+        'RETRY_ENABLED': True,
+        'RETRY_TIMES': 5,
+    }
+
     def start_requests(self):
         url = 'http://bb.yichehuoban.cn/ycgt/report/yiCheZhi/getYiCheZhiTableData'
-        # for page_type_code in type_dict.keys():
-        #     page_type_name = type_dict[page_type_code]
-        #     for city_dict_code in city_dict.keys():
-        #         city_dict_name = city_dict[city_dict_code]
-        #         for date in date_list:
-        #             if page_type_code == '2':
-        #                 for model_code in model_dict.keys():
-        #                     model_name = model_dict[model_code]
-        #                     data = {
-        #                         "date": date,
-        #                         "area": eval(city_dict_code),
-        #                         "carLevel": eval(model_code),
-        #                         "type": eval(page_type_code)
-        #                     }
-        #                     meta = {
-        #                         'page_type': page_type_name,
-        #                         'city': city_dict_name,
-        #                         'date': date,
-        #                         'model_type': model_name,
-        #                         'post_data': data
-        #                     }
-        #                     yield scrapy.Request(url=url, method='POST', body=json.dumps(data), meta=meta,
-        #                                          dont_filter=True, headers={'Content-Type': 'application/json'})
-        #             else:
-        #                 data = {
-        #                     "date": date,
-        #                     "area": eval(city_dict_code),
-        #                     "type": eval(page_type_code)
-        #                 }
-        #                 meta = {
-        #                     'page_type': page_type_name,
-        #                     'city': city_dict_name,
-        #                     'date': date,
-        #                     'post_data': data
-        #                 }
-        #                 yield scrapy.Request(url=url, method='POST', body=json.dumps(data), meta=meta,
-        #                                      dont_filter=True, headers={'Content-Type': 'application/json'})
+        redis_url = 'redis://192.168.2.149:6379/6'
+        r = redis.Redis.from_url(redis_url, decode_responses=True)
+        while 1:
+            post_data_json = r.blpop('yichezhi:post_data')
+            post_data_dict = json.loads(post_data_json[1])
 
-        # new
-        settings = {
-            "MONGODB_SERVER": "192.168.2.149",
-            "MONGODB_PORT": 27017,
-            "MONGODB_DB": "yiche",
-            "MONGODB_COLLECTION": "yichezhi_rank",
-        }
-
-        uri = f'mongodb://{settings["MONGODB_SERVER"]}:{settings["MONGODB_PORT"]}/'
-
-        connection = pymongo.MongoClient(uri)
-        db = connection[settings['MONGODB_DB']]
-        collection = db[settings['MONGODB_COLLECTION']]
-        db_data = list(collection.find({}, {'_id': 0, 'post_data': 1}))
-        post_data_list = [json.dumps(i['post_data']) for i in db_data]
-        print('已经存到数据库里的有：  ' + str(len(post_data_list)))
-        all_data_list = []
-        for page_type_code in type_dict.keys():
-            page_type_name = type_dict[page_type_code]
-            for city_dict_code in city_dict.keys():
-                city_dict_name = city_dict[city_dict_code]
-                for date in date_list:
-                    if page_type_code == '2':
-                        for model_code in model_dict.keys():
-                            model_name = model_dict[model_code]
-                            data = {
-                                "date": date,
-                                "area": eval(city_dict_code),
-                                "carLevel": eval(model_code),
-                                "type": eval(page_type_code)
-                            }
-                            all_data_list.append(json.dumps(data))
-                    else:
-                        data = {
-                            "date": date,
-                            "area": eval(city_dict_code),
-                            "type": eval(page_type_code)
-                        }
-                        all_data_list.append(json.dumps(data))
-        print('总的要抓的条数有： ' + str(len(all_data_list)))
-        lost_data = set(all_data_list) - set(post_data_list)
-        print('剩余的任务有: ' + str(len(lost_data)))
-        for data in lost_data:
-            data = json.loads(data)
-            date = data['date']
-            area = str(data['area']).replace("'", '"')
+            date = post_data_dict['date']
+            area = str(post_data_dict['area']).replace("'", '"')
             try:
-                carLevel = str(data['carLevel']).replace("'", '"')
+                carLevel = str(post_data_dict['carLevel']).replace("'", '"')
             except:
                 carLevel = None
-            type_code = str(data['type'])
+            type_code = str(post_data_dict['type'])
 
-            data_1 = {
+            data = {
                 "date": date,
                 "area": eval(area),
                 "carLevel": eval(carLevel),
@@ -564,9 +515,10 @@ class YichezhiSpider(scrapy.Spider):
                 'city': city_dict[area],
                 'date': date,
                 'model_type': model_dict[carLevel],
-                'post_data': data_1
+                'post_data': data
             }
-            yield scrapy.Request(url=url, method='POST', body=json.dumps(data_1), meta=meta,
+
+            yield scrapy.Request(url=url, method='POST', body=json.dumps(data), meta=meta,
                                  dont_filter=True, headers={'Content-Type': 'application/json'})
 
     def parse(self, response):

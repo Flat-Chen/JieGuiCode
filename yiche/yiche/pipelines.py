@@ -9,18 +9,19 @@ import logging
 import os
 import pathlib
 from hashlib import md5
-
 import pandas as pd
 import pymongo
 from itemadapter import ItemAdapter
+from pybloom_live import ScalableBloomFilter
 from scrapy.exceptions import DropItem
-from spyder.utils.external.pybloom_pyqt import ScalableBloomFilter
 from sqlalchemy import create_engine
 
 
-class GuaziPipeline:
-    def process_item(self, item, spider):
-        return item
+class YichePipeline:
+    @classmethod
+    def from_crawler(cls, crawler):
+        return cls(crawler.settings)
+
     def __init__(self, settings):
         # mysql
         self.conn = create_engine(
@@ -80,7 +81,7 @@ class GuaziPipeline:
                             level=logging.INFO)
                 return item
         # mongo不需要去重的爬虫名字写进去
-        elif spider.name in ["meiju", "yichezhi"]:
+        elif spider.name in [" ", "yichezhi"]:
             self.collection.insert(dict(item))
             logging.log(msg="Car added to MongoDB database!", level=logging.INFO)
             self.counts += 1
