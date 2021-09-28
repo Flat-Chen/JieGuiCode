@@ -538,4 +538,5 @@ class YichezhiSpider(scrapy.Spider):
         item['post_data'] = post_data
         item['content'] = response.text
         item['grab_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        yield item
+        yield
+
