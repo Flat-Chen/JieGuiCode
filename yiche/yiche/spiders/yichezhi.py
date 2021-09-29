@@ -528,18 +528,63 @@ class YichezhiSpider(scrapy.Spider):
         page_type = response.meta['page_type']
         city = response.meta['city']
         date = response.meta['date']
+        post_data = response.meta['post_data']
         try:
             model_type = response.meta['model_type']
         except:
             model_type = None
-        post_data = response.meta['post_data']
         item = {}
         item['page_type'] = page_type
         item['city'] = city
         item['date'] = date
         item['model_type'] = model_type
         item['post_data'] = post_data
-        item['content'] = response.text
         item['grab_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        yield item
-
+        data_json_list = json.loads(response.text)['retValue']['data']
+        if page_type == '品牌销量':
+            for j in data_json_list:
+                try:
+                    item['page_type'] = page_type
+                    item['city'] = city
+                    item['date'] = date
+                    item['model_type'] = model_type
+                    item['rank_no'] = j['serNo']
+                    item['brand'] = j['name']
+                    item['sales'] = j['sales']
+                    item['yoyRatio'] = j['yoyRatio']
+                    item['totalSales'] = j['totalSales']
+                    item['totalYoyRatio'] = j['totalYoyRatio']
+                    yield item
+                except:
+                    continue
+        elif page_type == '车型销量':
+            for j in data_json_list:
+                try:
+                    item['page_type'] = page_type
+                    item['city'] = city
+                    item['date'] = date
+                    item['model_type'] = model_type
+                    item['rank_no'] = j['serNo']
+                    item['model'] = j['name']
+                    item['sales'] = j['sales']
+                    item['yoyRatio'] = j['yoyRatio']
+                    item['linkRatio'] = j['linkRatio']
+                    yield item
+                except:
+                    continue
+        else:
+            for j in data_json_list:
+                try:
+                    item['page_type'] = page_type
+                    item['city'] = city
+                    item['date'] = date
+                    item['model_type'] = model_type
+                    item['rank_no'] = j['serNo']
+                    item['area'] = j['name']
+                    item['sales'] = j['sales']
+                    item['yoyRatio'] = j['yoyRatio']
+                    item['totalSales'] = j['totalSales']
+                    item['totalYoyRatio'] = j['totalYoyRatio']
+                    yield item
+                except:
+                    continue
