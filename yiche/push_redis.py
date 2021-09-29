@@ -475,7 +475,7 @@ for page_type_code in type_dict.keys():
     for city_dict_code in city_dict.keys():
         city_dict_name = city_dict[city_dict_code]
         for date in date_list:
-            if page_type_code == '2':
+            if page_type_code == '1':
                 for model_code in model_dict.keys():
                     model_name = model_dict[model_code]
                     data = {
@@ -498,7 +498,7 @@ print('剩余的任务有: ' + str(len(lost_data)))
 
 redis_url = 'redis://192.168.2.149:6379/6'
 r = redis.Redis.from_url(redis_url, decode_responses=True)
-for i in tqdm(list(lost_data)):
-    r.lpush('yichezhi:post_data', i)
+# for i in tqdm(list(lost_data)):
+#     r.lpush('yichezhi:post_data', i)
 
-
+r.lpush('yichezhi:post_data', *lost_data)
