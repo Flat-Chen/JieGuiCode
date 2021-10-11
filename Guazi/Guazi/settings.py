@@ -88,8 +88,6 @@ ITEM_PIPELINES = {
 # HTTPCACHE_IGNORE_HTTP_CODES = []
 # HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-
-
 RETRY_HTTP_CODES = [400, 403, 404, 408]
 # 是否开启重试
 RETRY_ENABLED = True
