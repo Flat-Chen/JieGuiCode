@@ -3,9 +3,10 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/Guazi" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/old_guazi/guazi/guazi" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tousu" isTestSource="false" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Python 3.6 (Scrapy15)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
