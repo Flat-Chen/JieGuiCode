@@ -73,9 +73,11 @@ class GuaziSpider(scrapy.Spider):
         #                              'family_name': family_name,
         #                              'tag': tag
         #                          })
+
         for car in json_data['data']['postList']:
             clue_id = car['clue_id']
             try:
+                # 取严选车
                 guarantee = car['title_tags']['text']
             except:
                 guarantee = None
@@ -96,17 +98,26 @@ class GuaziSpider(scrapy.Spider):
         guarantee = response.meta['guarantee']
         html = etree.HTML(str(response.body, encoding="utf-8"))
         print(html.xpath('//h4[@class="car-name"]/text()'))
-        '''
-        第一页要取数据的解析 
-        
-        '''
+
+        # 第一页要取数据的解析
+        info_dict = {}
+        divs = html.xpath('//div[@class="item"]')
+        for div in divs:
+            key_name = div.xpath('./p[1]/text()')[0].strip()
+            value_name = div.xpath('./p[2]/text()')[0].strip()
+            #     print(key_name, value_name)
+            info_dict[key_name] = value_name
+        # 注册时间
+        registeryear=html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][1]/p[1]/text()')[0]
+
         url = 'https://m.guazi.com/car-record/v2?clueId={}'.format(clue_id)
         yield scrapy.Request(url=url, callback=self.parse_parameter, dont_filter=True,
                              meta={
                                  'brand_name': brand_name,
                                  'family_name': family_name,
                                  'clue_id': clue_id,
-                                 'guarantee': guarantee
+                                 'guarantee': guarantee,
+
                              })
 
     def parse_parameter(self, response):
@@ -124,15 +135,16 @@ class GuaziSpider(scrapy.Spider):
                 value_name1 = configure.xpath('./div[@class="list-item__body__row__content"]/text()')[0].strip()
             except:
                 try:
-                    value_name1 = configure.xpath('./div[@class="list-item__body__row__content"]/span/@class')[
-                        0].replace('list-item__body__row__content--', '')
+                    value_name1 = configure.xpath('./div[@class="list-item__body__row__content"]/span/@class')[0]\
+                        .replace('list-item__body__row__content--', '')
                 except:
                     value_name1 = ''.join(
-                        configure.xpath('./div[@class="list-item__body__row__content"]//text()')).replace('\n',
-                                                                                                          '').replace(
+                        configure.xpath('./div[@class="list-item__body__row__content"]//text()'))\
+                        .replace('\n','').replace(
                         ' ', '')
             parameter_dict[key_name1] = value_name1
 
         item['carid'] = clue_id
         item['car_source'] = 'guazi'
         update_time = None
+
