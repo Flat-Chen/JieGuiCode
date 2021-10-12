@@ -443,3 +443,84 @@ CITY_DICT = {'鞍山': '57',
              '钟祥': '2260',
              '涿州': '1686',
              '邹平': '912'}
+# 数据库字段名 : 网页字段名
+CONF_DICT = {
+    'factoryname': '厂商',
+    'guidepricetax': '厂商指导价(万元)',
+    'makeyear': '上市时间',
+    'fueltype': '能源形式',
+    'gear': '变速器描述',
+    'bodystyle': '车身形式',
+    'body':'车身形式',
+    'first_owner': '进气形式',
+    'lwv': '气缸排列形式',
+    'lwvnumber': '气缸数(个)',
+    'maxps': '最大马力(Ps)',
+    'maxpower': '最大功率(kW)',
+    'maxnm': '最大扭矩(N·m)',
+    'fuelnumber': '燃油标号',
+    'gearnumber': '挡位个数',
+    'wheelbase': '轴距(mm)',
+    'height': '高度(mm)',
+    'width': '宽度(mm)',
+    'length': '长度(mm)',
+    'frontgauge': '前轮距(mm)',
+    'doors': '车门数(个)',
+    'seats': '座位数(个)',
+    'weight': '整备质量(kg)',
+    'driverway': '驱动方式',
+
+
+}
+
+
+
+
+# # familyname生产厂家
+# factoryname = parameter_dict['厂商']
+# # 指导价(含税)
+# guidepricetax = parameter_dict['厂商指导价(万元)']
+# # 年款
+# makeyear=parameter_dict['上市时间']
+# # 燃油类型
+# fueltype = parameter_dict['能源形式']
+# # 变速箱描述
+# gear = parameter_dict['变速器描述']
+# # 车身类型
+# bodystyle = parameter_dict['车身形式']
+# # 进气方式
+# first_owner=parameter_dict['进气形式']
+# # 气缸排列型式
+# lwv = parameter_dict['气缸排列形式']
+# # 气缸数
+# lwvnumber = parameter_dict['气缸数(个)']
+# # 最大马力
+# maxps = parameter_dict['最大马力(Ps)']
+# # 最大功率
+# maxpower = parameter_dict['最大功率(kW)']
+# # 最大扭矩
+# maxnm = parameter_dict['最大扭矩(N·m)']
+# # 燃油标号
+# fuelnumber = parameter_dict['燃油标号']
+# # 档位数
+# gearnumber = parameter_dict['挡位个数']
+# # 轴距
+# wheelbase = parameter_dict['轴距(mm)']
+# # 车高
+# height = parameter_dict['高度(mm)']
+# # 车宽
+# width=parameter_dict['宽度(mm)']
+# # 车长
+# length = parameter_dict['长度(mm)']
+# # 前轮距
+# frontgauge = parameter_dict['前轮距(mm)']
+# # 车门数量
+# doors = parameter_dict['车门数(个)']
+# # 座位数
+# seats = parameter_dict['座位数(个)']
+# # 整备质量
+# weight = parameter_dict['整备质量(kg)']
+# # 驱动类型
+# driverway = parameter_dict['驱动方式']
+# # 描述
+# # desc=

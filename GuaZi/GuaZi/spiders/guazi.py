@@ -1,4 +1,6 @@
 import json
+import time
+
 from lxml import etree
 import scrapy
 
@@ -51,7 +53,7 @@ class GuaziSpider(scrapy.Spider):
                                              'family_name': family_name,
                                              'tag': tag
                                          })
-                    break
+                    # break
                 break
             break
 
@@ -99,6 +101,8 @@ class GuaziSpider(scrapy.Spider):
         html = etree.HTML(str(response.body, encoding="utf-8"))
         print(html.xpath('//h4[@class="car-name"]/text()'))
 
+
+
         # 第一页要取数据的解析
         info_dict = {}
         divs = html.xpath('//div[@class="item"]')
@@ -107,38 +111,101 @@ class GuaziSpider(scrapy.Spider):
             value_name = div.xpath('./p[2]/text()')[0].strip()
             #     print(key_name, value_name)
             info_dict[key_name] = value_name
-        # 注册时间
-        registeryear=html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][1]/p[1]/text()')[0]\
-            .strip()
-        # 里程
-        mileage=html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][2]/p[@class="text"]/text()')[0]\
-            .strip()
-        # 排放标准
-        emission=html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][3]/p[@class="text"]/text()')[0]\
-            .strip()
-        # 过户次数
-        change_times=info_dict['过户次数']
-        # 排量
-        output=info_dict['排量']
-        # 城市归属地
-        city=info_dict['车牌归属地']
-        # 变速箱类型
-        geartype=info_dict['变速箱']
-        # 年检到期时间
-        yearchecktime=info_dict['年检到期']
-        # 车辆用途
-        usage=info_dict['使用性质']
-        # 交强险
-        insurance1_date=info_dict['交强险到期']
-        # 颜色
-        color=info_dict['车身颜色']
-        # 出厂日期
-        produceyear=info_dict['出厂日期']
-        # 车源号
-        statusplus=info_dict['车源号']
-        # 钥匙
-        keynumbers=info_dict['钥匙数量']
 
+
+
+        # 二手车价格
+        try:
+            price1 = html.xpath('//div[@class="c-series-market__car-info-item"][1]/text()')[0].strip()\
+                .replace("当前车源：","")
+        except:
+            price1=html.xpath('//div[@class="c-car-price__left-price"]/span[@class="c-car-price__left-value"]/text()')[0]
+        else:
+            price1=None
+        # 车辆标题描述
+        try:
+            shortdesc = html.xpath('//div[@class="c-page-wrapper c-page-wrapper__success p-detail"]//div[@class="m-car-title"]/h4[@class="car-name"]/text()')
+        except:
+            shortdesc =None
+        # 注册时间
+        try:
+            registeryear=html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][1]/p[1]/text()')[0]\
+            .strip()
+        except:
+            registeryear =None
+        # 里程
+        try:
+            mileage=html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][2]/p[@class="text"]/text()')[0]\
+            .strip()
+        except:
+            mileage =None
+        # 排放标准
+        try:
+            emission=html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][3]/p[@class="text"]/text()')[0]\
+            .strip()
+        except:
+            emission=None
+        # 过户次数
+        try:
+            change_times=info_dict['过户次数']
+        except:
+            change_times=None
+        # 排量
+        try:
+            output=info_dict['排量']
+        except:
+            output=None
+        # 城市归属地
+        try:
+            city=info_dict['车牌归属地']
+        except:
+            city = None
+        # 变速箱类型
+        try:
+            geartype=info_dict['变速箱']
+        except:
+            geartype= None
+        # 年检到期时间
+        try:
+            yearchecktime=info_dict['年检到期']
+        except:
+            yearchecktime= None
+        # 车辆用途
+        try:
+            usage=info_dict['使用性质']
+        except:
+            usage= None
+        # 交强险
+        try:
+            insurance1_date=info_dict['交强险到期']
+        except:
+            insurance1_date= None
+        # 颜色
+        try:
+            color=info_dict['车身颜色']
+        except:
+            color= None
+        # 出厂日期
+        try:
+            produceyear=info_dict['出厂日期']
+        except:
+            produceyear= None
+        # 车源号
+        try:
+            statusplus=info_dict['车源号']
+        except:
+            statusplus= None
+        # 钥匙
+        try:
+            keynumbers=info_dict['钥匙数量']
+        except:
+            keynumbers= None
+        # 图片地址
+        try:
+            img_url = html.xpath(
+                '//div[@class="m-car-banner__swiper-item swiper-slide swiper-slide-active"]/img[@class="m-car-banner__img"]/@src')
+        except:
+            img_url=None
         url = 'https://m.guazi.com/car-record/v2?clueId={}'.format(clue_id)
         yield scrapy.Request(url=url, callback=self.parse_parameter, dont_filter=True,
                              meta={
@@ -160,8 +227,11 @@ class GuaziSpider(scrapy.Spider):
                                  'produceyear':produceyear,
                                  'statusplus':statusplus,
                                  'keynumbers':keynumbers,
-
+                                 'price1':price1,
+                                 'shortdesc':shortdesc,
+                                 'img_url':img_url,
                              })
+
 
     def parse_parameter(self, response):
         item = {}
@@ -183,6 +253,10 @@ class GuaziSpider(scrapy.Spider):
         produceyear=response.meta['produceyear']
         statusplus=response.meta['statusplus']
         keynumbers=response.meta['keynumbers']
+        price1=response.meta['price1']
+        shortdesc=response.meta['shortdesc']
+        img_url=response.meta['img_url']
+
         html = etree.HTML(str(response.body, encoding="utf-8"))
         parameter_dict = {}
         configures = html.xpath('//li[@class="list-item__body__row"]')
@@ -200,57 +274,127 @@ class GuaziSpider(scrapy.Spider):
                         .replace('\n','').replace(
                         ' ', '')
             parameter_dict[key_name1] = value_name1
-        # familyname生产厂家
-        factoryname = parameter_dict['厂商']
-        # 指导价(含税)
-        guidepricetax = parameter_dict['厂商指导价(万元)']
-        # 年款
-        makeyear=parameter_dict['上市时间']
-        # 燃油类型
-        fueltype = parameter_dict['能源形式']
-        # 变速箱描述
-        gear = parameter_dict['变速器描述']
-        # 车身类型
-        bodystyle = parameter_dict['车身形式']
-        # 进气方式
-        first_owner=parameter_dict['进气形式']
-        # 气缸排列型式
-        lwv = parameter_dict['气缸排列形式']
-        # 气缸数
-        lwvnumber = parameter_dict['气缸数(个)']
-        # 最大马力
-        maxps = parameter_dict['最大马力(Ps)']
-        # 最大功率
-        maxpower = parameter_dict['最大功率(kW)']
-        # 最大扭矩
-        maxnm = parameter_dict['最大扭矩(N·m)']
-        # 燃油标号
-        fuelnumber = parameter_dict['燃油标号']
-        # 档位数
-        gearnumber = parameter_dict['挡位个数']
-        # 轴距
-        wheelbase = parameter_dict['轴距(mm)']
-        # 车高
-        height = parameter_dict['高度(mm)']
-        # 车宽
-        width=parameter_dict['宽度(mm)']
-        # 车长
-        length = parameter_dict['长度(mm)']
-        # 前轮距
-        frontgauge = parameter_dict['前轮距(mm)']
-        # 车门数量
-        doors = parameter_dict['车门数(个)']
-        # 座位数
-        seats = parameter_dict['座位数(个)']
-        # 整备质量
-        weight = parameter_dict['整备质量(kg)']
-        # 驱动类型
-        driverway = parameter_dict['驱动方式']
-        # 描述
-        desc=
+        conf_dict = self.settings.get("CONF_DICT")
+        desc_list = []
+        for i in conf_dict.keys():
+            try:
+                item[i] = parameter_dict[conf_dict[i]]
+                if parameter_dict[conf_dict[i]] == 'standard':
+                    desc_list.append(i)
+            except:
+                item[i] = None
+
+
 
         item['carid'] = clue_id
         item['car_source'] = 'guazi'
-        update_time = None
+        item['grab_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        item['update_time'] = None
+        item['post_time'] = None
+        item["sold_date"] = None
+        item["pagetime"] = "zero"
+        item["parsetime"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        item["shortdesc"] = shortdesc
+        item["pagetitle"] = shortdesc
+        item["url"] = response.url
+        item["status"] = "sale"
+        item["brand"] = brand_name
+        item["series"] =family_name
+        item["factoryname"]=parameter_dict[conf_dict["factoryname"]]
+        item["modelname"] = None
+        item["modelname"] = None
+        item["brandid"] = None
+        item["familyid"] = None
+        item["seriesid"] = None
+        item['desc'] = '/'.join(desc_list)
+        item["makeyear"] = parameter_dict[conf_dict["makeyear"]]
+        item["registeryear"] =registeryear
+        item["produceyear"] = None
+        item["bodystyle"]=parameter_dict[conf_dict["bodystyle"]]
+        # item["level"]=
+        item["fueltype"] = parameter_dict[conf_dict["fueltype"]]
+        item["driverway"] = parameter_dict[conf_dict["driverway"]]
+        item["body"] = parameter_dict[conf_dict["body"]]
+        item["output"]=output
+        item["guideprice"] = None
+        item["guidepricetax"] = parameter_dict[conf_dict["guidepricetax"]]
+        item["doors"] = parameter_dict[conf_dict["doors"]]
+        item["emission"] =parameter_dict[conf_dict["emission"]]
+        item["gear"]=parameter_dict[conf_dict["gear"]]
+        item["geartype"] =geartype
+        item["seats"] =parameter_dict[conf_dict["seats"]]
+        item["length"] =parameter_dict[conf_dict["length"]]
+        item["width"] =parameter_dict[conf_dict["width"]]
+        item["height"]=parameter_dict[conf_dict["height"]]
+        item["weight"]=parameter_dict[conf_dict["weight"]]
+        item["gearnumber"]=parameter_dict[conf_dict["gearnumber"]]
+        item["wheelbase"]=parameter_dict[conf_dict["wheelbase"]]
+        item["generation"] = None
+        item["fuelnumber"]=parameter_dict[conf_dict["fuelnumber"]]
+        item["lwv"]=parameter_dict[conf_dict["lwv"]]
+        item["lwvnumber"]=parameter_dict[conf_dict["lwvnumber"]]
+        item["maxnm"]=parameter_dict[conf_dict["maxnm"]]
+        item["maxpower"]=parameter_dict[conf_dict["maxpower"]]
+        item["maxps"]=parameter_dict[conf_dict["maxps"]]
+        item["frontgauge"] = None
+        item["compress"] = None
+        item["compress"] =registeryear
+        item["years"] = None
+        item["paytype"] = None
+        item["price1"]=price1
+        item["pricetag"] = None
+        item["mileage"] =mileage
+        item["usage"] = usage
+        item["color"] = color
+        item["city"] = city
+        item["prov"] = None
+        item["guarantee"] = guarantee
+        # item["totalcheck_desc"]
+        item["totalcheck_desc"] = None
+        item["totalgrade"] = None
+        item["contact_type"] = None
+        item["contact_name"] = None
+        item["contact_phone"] = None
+        item["contact_address"] = None
+        item["contact_company"]=None
+        item["contact_url"] = None
+        item["change_date"] = None
+        item["change_times"]=change_times
+        item["insurance1_date"]=insurance1_date
+        item["insurance2_date"]=None
+        item["hascheck"] = None
+        item["repairinfo"] = None
+        item["yearchecktime"]=yearchecktime
+        item["carokcf"] = None
+        item["carcard"] = None
+        item["carinvoice"] = None
+        # item["accident_desc"]
+        item["accident_score"] = None
+        # item["outer_desc"]
+        # item["safe_desc"]
+        item["outer_score"] = None
+        item["inner_desc"] = None
+        item["inner_score"] = None
+        item["safe_score"] = None
+        item["road_desc"] = None
+        item["road_score"] = None
+        item["lastposttime"] = None
+        item["newcartitle"] = None
+        item["newcarurl"] = None
+        item["img_url"] = img_url
+        item["first_owner"] =parameter_dict[conf_dict["first_owner"]]
+        item["carno"] =city
+        item["carnotype"] = None
+        item["carddate"] = None
+        item["changecolor"] = None
+        item["outcolor"] = None
+        item["innercolor"] = None
+        item["produceyear"] =produceyear
+        item["statusplus"] = statusplus
+        item["keynumbers"] = keynumbers
+
+
+
+        # print(item)
 
 
