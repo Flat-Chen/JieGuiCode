@@ -1,6 +1,5 @@
 import json
 import time
-
 from lxml import etree
 import scrapy
 
@@ -24,7 +23,7 @@ class GuaziSpider(scrapy.Spider):
         'MYSQL_PWD': "94dataUser@2020",
         'MYSQL_PORT': 3306,
         'MYSQL_DB': 'usedcar_update',
-        'MYSQL_TABLE': 'guazi_online',
+        'MYSQL_TABLE': 'guazi_online_testjg',
         'MONGODB_SERVER': '127.0.0.1',
         'MONGODB_PORT': 27017,
         'MONGODB_DB': 'guazi',
@@ -46,35 +45,53 @@ class GuaziSpider(scrapy.Spider):
                     family_name = family['name']
                     tag = family['url']
                     # print(brand_name, family_name, tag)
-                    url = 'https://mapi.guazi.com/car-source/carList/pcList?tag={}&page=1&pageSize=20'.format(tag)
-                    yield scrapy.Request(url=url, callback=self.parse_clue_id,
+                    url = 'https://mapi.guazi.com/car-source/series/getSeriesRaiders?seriesId={}'.format(family['id'])
+                    yield scrapy.Request(url=url, callback=self.parse_car_level,
                                          meta={
                                              'brand_name': brand_name,
                                              'family_name': family_name,
                                              'tag': tag
                                          })
                     # break
-                break
-            break
+            #     break
+            # break
+
+    def parse_car_level(self, response):
+        tag = response.meta['tag']
+        brand_name = response.meta['brand_name']
+        family_name = response.meta['family_name']
+        json_data = json.loads(response.text)
+        try:
+            car_level = json_data['data']['carSeriesInfo']['carLevel']
+        except:
+            car_level = None
+        url = 'https://mapi.guazi.com/car-source/carList/pcList?tag={}&page=1&pageSize=20'.format(tag)
+        yield scrapy.Request(url=url, callback=self.parse_clue_id,
+                             meta={
+                                 'brand_name': brand_name,
+                                 'family_name': family_name,
+                                 'tag': tag,
+                                 'car_level': car_level
+                             })
 
     def parse_clue_id(self, response):
         tag = response.meta['tag']
         brand_name = response.meta['brand_name']
         family_name = response.meta['family_name']
-        item = {}
+        car_level = response.meta['car_level']
         json_data = json.loads(response.text)
         page = int(json_data['data']['page'])
         total_page = int(json_data['data']['totalPage'])
-        print('--------------------------------当前{}页，共{}页-----------------------------'.format(page, total_page))
-        # if page < total_page:
-        #     next_url = 'https://mapi.guazi.com/car-source/carList/pcList?tag={}&page={}&pageSize=20'.format(tag,
-        #                                                                                                     page + 1)
-        #     yield scrapy.Request(url=next_url, callback=self.parse_clue_id,
-        #                          meta={
-        #                              'brand_name': brand_name,
-        #                              'family_name': family_name,
-        #                              'tag': tag
-        #                          })
+        # print('--------------------------------当前{}页，共{}页-----------------------------'.format(page, total_page))
+        if page < total_page:
+            next_url = 'https://mapi.guazi.com/car-source/carList/pcList?tag={}&page={}&pageSize=20'.format(tag,
+                                                                                                            page + 1)
+            yield scrapy.Request(url=next_url, callback=self.parse_clue_id,
+                                 meta={
+                                     'brand_name': brand_name,
+                                     'family_name': family_name,
+                                     'tag': tag
+                                 })
 
         for car in json_data['data']['postList']:
             clue_id = car['clue_id']
@@ -89,19 +106,17 @@ class GuaziSpider(scrapy.Spider):
                                      'brand_name': brand_name,
                                      'family_name': family_name,
                                      'clue_id': clue_id,
-                                     'guarantee': guarantee
+                                     'guarantee': guarantee,
+                                     'car_level': car_level
                                  })
-            break
 
     def parse_index(self, response):
         brand_name = response.meta['brand_name']
         family_name = response.meta['family_name']
         clue_id = response.meta['clue_id']
         guarantee = response.meta['guarantee']
+        car_level = response.meta['car_level']
         html = etree.HTML(str(response.body, encoding="utf-8"))
-        print(html.xpath('//h4[@class="car-name"]/text()'))
-
-
 
         # 第一页要取数据的解析
         info_dict = {}
@@ -112,126 +127,129 @@ class GuaziSpider(scrapy.Spider):
             #     print(key_name, value_name)
             info_dict[key_name] = value_name
 
-
-
         # 二手车价格
         try:
-            price1 = html.xpath('//div[@class="c-series-market__car-info-item"][1]/text()')[0].strip()\
-                .replace("当前车源：","")
+            price1 = html.xpath('//div[@class="c-series-market__car-info-item"][1]/text()')[0].strip() \
+                .replace("当前车源：", "")
         except:
-            price1=html.xpath('//div[@class="c-car-price__left-price"]/span[@class="c-car-price__left-value"]/text()')[0]
+            price1 = \
+                html.xpath('//div[@class="c-car-price__left-price"]/span[@class="c-car-price__left-value"]/text()')[0]
         else:
-            price1=None
+            price1 = None
         # 车辆标题描述
         try:
-            shortdesc = html.xpath('//div[@class="c-page-wrapper c-page-wrapper__success p-detail"]//div[@class="m-car-title"]/h4[@class="car-name"]/text()')
+            shortdesc = html.xpath(
+                '//div[@class="c-page-wrapper c-page-wrapper__success p-detail"]//div[@class="m-car-title"]/h4[@class="car-name"]/text()')
         except:
-            shortdesc =None
+            shortdesc = None
         # 注册时间
         try:
-            registeryear=html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][1]/p[1]/text()')[0]\
-            .strip()
+            registeryear = html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][1]/p[1]/text()')[0] \
+                .strip()
         except:
-            registeryear =None
+            registeryear = None
         # 里程
         try:
-            mileage=html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][2]/p[@class="text"]/text()')[0]\
-            .strip()
+            mileage = \
+                html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][2]/p[@class="text"]/text()')[0] \
+                    .strip()
         except:
-            mileage =None
+            mileage = None
         # 排放标准
         try:
-            emission=html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][3]/p[@class="text"]/text()')[0]\
-            .strip()
+            emission = \
+                html.xpath('//div[@class="m-car-record__body--top"]/div[@class="item"][3]/p[@class="text"]/text()')[0] \
+                    .strip()
         except:
-            emission=None
+            emission = None
         # 过户次数
         try:
-            change_times=info_dict['过户次数']
+            change_times = info_dict['过户次数']
         except:
-            change_times=None
+            change_times = None
         # 排量
         try:
-            output=info_dict['排量']
+            output = info_dict['排量']
         except:
-            output=None
+            output = None
         # 城市归属地
         try:
-            city=info_dict['车牌归属地']
+            city = info_dict['车牌归属地']
         except:
             city = None
         # 变速箱类型
         try:
-            geartype=info_dict['变速箱']
+            geartype = info_dict['变速箱']
         except:
-            geartype= None
+            geartype = None
         # 年检到期时间
         try:
-            yearchecktime=info_dict['年检到期']
+            yearchecktime = info_dict['年检到期']
         except:
-            yearchecktime= None
+            yearchecktime = None
         # 车辆用途
         try:
-            usage=info_dict['使用性质']
+            usage = info_dict['使用性质']
         except:
-            usage= None
+            usage = None
         # 交强险
         try:
-            insurance1_date=info_dict['交强险到期']
+            insurance1_date = info_dict['交强险到期']
         except:
-            insurance1_date= None
+            insurance1_date = None
         # 颜色
         try:
-            color=info_dict['车身颜色']
+            color = info_dict['车身颜色']
         except:
-            color= None
+            color = None
         # 出厂日期
         try:
-            produceyear=info_dict['出厂日期']
+            produceyear = info_dict['出厂日期']
         except:
-            produceyear= None
+            produceyear = None
         # 车源号
         try:
-            statusplus=info_dict['车源号']
+            statusplus = info_dict['车源号']
         except:
-            statusplus= None
+            statusplus = None
         # 钥匙
         try:
-            keynumbers=info_dict['钥匙数量']
+            keynumbers = info_dict['钥匙数量']
         except:
-            keynumbers= None
+            keynumbers = None
         # 图片地址
         try:
             img_url = html.xpath(
                 '//div[@class="m-car-banner__swiper-item swiper-slide swiper-slide-active"]/img[@class="m-car-banner__img"]/@src')
         except:
-            img_url=None
+            img_url = None
         url = 'https://m.guazi.com/car-record/v2?clueId={}'.format(clue_id)
+
         yield scrapy.Request(url=url, callback=self.parse_parameter, dont_filter=True,
                              meta={
                                  'brand_name': brand_name,
                                  'family_name': family_name,
                                  'clue_id': clue_id,
                                  'guarantee': guarantee,
-                                 'registeryear':registeryear,
-                                 'mileage':mileage,
-                                 'emission':emission,
-                                 'change_times':change_times,
-                                 'output':output,
-                                 'city':city,
-                                 'geartype':geartype,
-                                 'yearchecktime':yearchecktime,
-                                 'usage':usage,
-                                 'insurance1_date':insurance1_date,
-                                 'color':color,
-                                 'produceyear':produceyear,
-                                 'statusplus':statusplus,
-                                 'keynumbers':keynumbers,
-                                 'price1':price1,
-                                 'shortdesc':shortdesc,
-                                 'img_url':img_url,
+                                 'registeryear': registeryear,
+                                 'mileage': mileage,
+                                 'emission': emission,
+                                 'change_times': change_times,
+                                 'output': output,
+                                 'city': city,
+                                 'geartype': geartype,
+                                 'yearchecktime': yearchecktime,
+                                 'usage': usage,
+                                 'insurance1_date': insurance1_date,
+                                 'color': color,
+                                 'produceyear': produceyear,
+                                 'statusplus': statusplus,
+                                 'keynumbers': keynumbers,
+                                 'price1': price1,
+                                 'shortdesc': shortdesc,
+                                 'img_url': img_url,
+                                 'car_level': car_level,
                              })
-
 
     def parse_parameter(self, response):
         item = {}
@@ -239,23 +257,23 @@ class GuaziSpider(scrapy.Spider):
         family_name = response.meta['family_name']
         clue_id = response.meta['clue_id']
         guarantee = response.meta['guarantee']
-        registeryear=response.meta['registeryear']
-        mileage=response.meta['mileage']
-        emission=response.meta['emission']
-        change_times=response.meta['change_times']
-        output=response.meta['output']
-        city=response.meta['city']
-        geartype=response.meta['geartype']
-        yearchecktime=response.meta['yearchecktime']
-        usage=response.meta['usage']
-        insurance1_date=response.meta['insurance1_date']
-        color=response.meta['color']
-        produceyear=response.meta['produceyear']
-        statusplus=response.meta['statusplus']
-        keynumbers=response.meta['keynumbers']
-        price1=response.meta['price1']
-        shortdesc=response.meta['shortdesc']
-        img_url=response.meta['img_url']
+        registeryear = response.meta['registeryear']
+        mileage = response.meta['mileage']
+        emission = response.meta['emission']
+        change_times = response.meta['change_times']
+        output = response.meta['output']
+        city = response.meta['city']
+        geartype = response.meta['geartype']
+        yearchecktime = response.meta['yearchecktime']
+        usage = response.meta['usage']
+        insurance1_date = response.meta['insurance1_date']
+        color = response.meta['color']
+        produceyear = response.meta['produceyear']
+        statusplus = response.meta['statusplus']
+        # keynumbers = response.meta['keynumbers']
+        price1 = response.meta['price1']
+        shortdesc = response.meta['shortdesc']
+        img_url = response.meta['img_url']
 
         html = etree.HTML(str(response.body, encoding="utf-8"))
         parameter_dict = {}
@@ -266,25 +284,28 @@ class GuaziSpider(scrapy.Spider):
                 value_name1 = configure.xpath('./div[@class="list-item__body__row__content"]/text()')[0].strip()
             except:
                 try:
-                    value_name1 = configure.xpath('./div[@class="list-item__body__row__content"]/span/@class')[0]\
+                    value_name1 = configure.xpath('./div[@class="list-item__body__row__content"]/span/@class')[0] \
                         .replace('list-item__body__row__content--', '')
                 except:
                     value_name1 = ''.join(
-                        configure.xpath('./div[@class="list-item__body__row__content"]//text()'))\
-                        .replace('\n','').replace(
+                        configure.xpath('./div[@class="list-item__body__row__content"]//text()')) \
+                        .replace('\n', '').replace(
                         ' ', '')
             parameter_dict[key_name1] = value_name1
         conf_dict = self.settings.get("CONF_DICT")
         desc_list = []
+        desc_ = ['电动天窗', '倒车雷达', '前排座椅加热', 'GPS导航', '倒车影像系统', '多功能方向盘', '全景天窗']
+        for i in desc_:
+            try:
+                if parameter_dict[i]:
+                    desc_list.append(i)
+            except:
+                continue
         for i in conf_dict.keys():
             try:
                 item[i] = parameter_dict[conf_dict[i]]
-                if parameter_dict[conf_dict[i]] == 'standard':
-                    desc_list.append(i)
             except:
                 item[i] = None
-
-
 
         item['carid'] = clue_id
         item['car_source'] = 'guazi'
@@ -299,102 +320,39 @@ class GuaziSpider(scrapy.Spider):
         item["url"] = response.url
         item["status"] = "sale"
         item["brand"] = brand_name
-        item["series"] =family_name
-        item["factoryname"]=parameter_dict[conf_dict["factoryname"]]
-        item["modelname"] = None
-        item["modelname"] = None
-        item["brandid"] = None
-        item["familyid"] = None
-        item["seriesid"] = None
+        item["series"] = family_name
         item['desc'] = '/'.join(desc_list)
-        item["makeyear"] = parameter_dict[conf_dict["makeyear"]]
-        item["registeryear"] =registeryear
-        item["produceyear"] = None
-        item["bodystyle"]=parameter_dict[conf_dict["bodystyle"]]
-        # item["level"]=
-        item["fueltype"] = parameter_dict[conf_dict["fueltype"]]
-        item["driverway"] = parameter_dict[conf_dict["driverway"]]
-        item["body"] = parameter_dict[conf_dict["body"]]
-        item["output"]=output
-        item["guideprice"] = None
-        item["guidepricetax"] = parameter_dict[conf_dict["guidepricetax"]]
-        item["doors"] = parameter_dict[conf_dict["doors"]]
-        item["emission"] =parameter_dict[conf_dict["emission"]]
-        item["gear"]=parameter_dict[conf_dict["gear"]]
-        item["geartype"] =geartype
-        item["seats"] =parameter_dict[conf_dict["seats"]]
-        item["length"] =parameter_dict[conf_dict["length"]]
-        item["width"] =parameter_dict[conf_dict["width"]]
-        item["height"]=parameter_dict[conf_dict["height"]]
-        item["weight"]=parameter_dict[conf_dict["weight"]]
-        item["gearnumber"]=parameter_dict[conf_dict["gearnumber"]]
-        item["wheelbase"]=parameter_dict[conf_dict["wheelbase"]]
-        item["generation"] = None
-        item["fuelnumber"]=parameter_dict[conf_dict["fuelnumber"]]
-        item["lwv"]=parameter_dict[conf_dict["lwv"]]
-        item["lwvnumber"]=parameter_dict[conf_dict["lwvnumber"]]
-        item["maxnm"]=parameter_dict[conf_dict["maxnm"]]
-        item["maxpower"]=parameter_dict[conf_dict["maxpower"]]
-        item["maxps"]=parameter_dict[conf_dict["maxps"]]
-        item["frontgauge"] = None
-        item["compress"] = None
-        item["compress"] =registeryear
-        item["years"] = None
-        item["paytype"] = None
-        item["price1"]=price1
-        item["pricetag"] = None
-        item["mileage"] =mileage
+        item["registeryear"] = registeryear
+        item["output"] = output
+        item["geartype"] = geartype
+        item["registerdate"] = registeryear
+        item["price1"] = price1
+        item["mileage"] = mileage
         item["usage"] = usage
         item["color"] = color
         item["city"] = city
-        item["prov"] = None
         item["guarantee"] = guarantee
-        # item["totalcheck_desc"]
-        item["totalcheck_desc"] = None
-        item["totalgrade"] = None
-        item["contact_type"] = None
-        item["contact_name"] = None
-        item["contact_phone"] = None
-        item["contact_address"] = None
-        item["contact_company"]=None
-        item["contact_url"] = None
-        item["change_date"] = None
-        item["change_times"]=change_times
-        item["insurance1_date"]=insurance1_date
-        item["insurance2_date"]=None
-        item["hascheck"] = None
-        item["repairinfo"] = None
-        item["yearchecktime"]=yearchecktime
-        item["carokcf"] = None
-        item["carcard"] = None
-        item["carinvoice"] = None
-        # item["accident_desc"]
-        item["accident_score"] = None
-        # item["outer_desc"]
-        # item["safe_desc"]
-        item["outer_score"] = None
-        item["inner_desc"] = None
-        item["inner_score"] = None
-        item["safe_score"] = None
-        item["road_desc"] = None
-        item["road_score"] = None
-        item["lastposttime"] = None
-        item["newcartitle"] = None
-        item["newcarurl"] = None
+        item["change_times"] = change_times
+        item["insurance1_date"] = insurance1_date
+        item["yearchecktime"] = yearchecktime
         item["img_url"] = img_url
-        item["first_owner"] =parameter_dict[conf_dict["first_owner"]]
-        item["carno"] =city
-        item["carnotype"] = None
-        item["carddate"] = None
-        item["changecolor"] = None
-        item["outcolor"] = None
-        item["innercolor"] = None
-        item["produceyear"] =produceyear
+        item["carno"] = city
+        item["produceyear"] = produceyear
         item["statusplus"] = statusplus
-        item["keynumbers"] = keynumbers
+        item["emission"] = emission
+        item['level'] = response.meta['car_level']
 
+        jiance_url = 'https://m.guazi.com/check-report/v2?clueId={}'.format(clue_id)
+        yield scrapy.Request(url=jiance_url, callback=self.parse_jiance, meta={'item': item}, dont_filter=True)
 
-
-        # print(item)
-
-
+    def parse_jiance(self, response):
+        item = response.meta['item']
+        html = etree.HTML(str(response.body, encoding="utf-8"))
+        # 检测综述
+        try:
+            totalcheck_desc = html.xpath('//div[@class="serious-problem check-report-container__item"]'
+                                         '/div[@class="item-header"]/div[@class="item-header__desc"]/text()')[0]
+        except:
+            totalcheck_desc = None
+        item['totalcheck_desc'] = totalcheck_desc
+        yield item

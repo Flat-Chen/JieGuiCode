@@ -12,9 +12,8 @@ from hashlib import md5
 
 import pandas as pd
 import pymongo
-from itemadapter import ItemAdapter
+from pybloom_live import ScalableBloomFilter
 from scrapy.exceptions import DropItem
-from spyder.utils.external.pybloom_pyqt import ScalableBloomFilter
 from sqlalchemy import create_engine
 
 
@@ -66,7 +65,7 @@ class GuaziPipeline:
 
     def process_item(self, item, spider):
         # mongo要有重字段status的爬虫名字写进去
-        if spider.name in ["guazi", "", '']:
+        if spider.name in ["", "", '']:
             valid = True
             i = md5(item['status'].encode("utf8")).hexdigest()
             returndf = self.df.add(i)
@@ -82,7 +81,7 @@ class GuaziPipeline:
                             level=logging.INFO)
                 return item
         # mongo不需要去重的爬虫名字写进去
-        elif spider.name in [" ", "yichezhi"]:
+        elif spider.name in ["", "yichezhi"]:
             self.collection.insert(dict(item))
             logging.log(msg="Car added to MongoDB database!", level=logging.INFO)
             self.counts += 1
@@ -110,7 +109,7 @@ class GuaziPipeline:
                 logging.log(msg=f"add data in mysql", level=logging.INFO)
                 return item
         # mysql不需要去重的爬虫名字写进去
-        elif spider.name in ['', '', '']:
+        elif spider.name in ['guazi', '', '']:
             self.mysqlcounts += 1
             logging.log(msg=f"scrapy              {self.mysqlcounts}              items", level=logging.INFO)
             # 数据存入mysql

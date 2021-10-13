@@ -77,8 +77,12 @@ class GuaZiSeleniumMiddleware(object):
         self.browser = Chrome(options=chrome_options)
 
         # 擦除浏览器指纹
-        with open('stealth.min.js') as f:
-            self.clean_js = f.read()
+        try:
+            with open('stealth.min.js') as f:
+                self.clean_js = f.read()
+        except:
+            with open('/home/stealth.min.js') as f:
+                self.clean_js = f.read()
 
         self.browser.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
             "source": self.clean_js
@@ -99,7 +103,7 @@ class GuaZiSeleniumMiddleware(object):
 
     def process_request(self, request, spider):
         if 'm.guazi.com' in request.url:
-            logging.info('！！！！！！用浏览器打开获取渲染后的网页源代码！！！！！')
+            # logging.info('！！！！！！用浏览器打开获取渲染后的网页源代码！！！！！')
             # 此处访问要请求的url
             try:
                 for i in range(3):
