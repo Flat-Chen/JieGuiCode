@@ -93,27 +93,30 @@ class Xcar1Spider(scrapy.Spider):
 
 
     #
-    def get_luntan(self, response, ):
+    def get_luntan(self, response):
         # print(response.meta["brand"], response.meta["user_car"], "*" * 50)
         brand=response.meta["brand"]
-        luntan_name_list[i]=response.meta["user-car"]
+        luntan_name_list=response.meta["user_car"]
+        fid_id=response.meta["fid_id"]
         response.meta["page"] = response.meta["page"] + 1
         json_data = json.loads(response.text)
         for luntan_list in json_data['data']['data']['thread_list']:
             luntan_id_list=luntan_list['tid']
             url = "http://www.xcar.com.cn/bbs/xbbsapi/forumdisplay/get_thread_list.php?fid={}&orderby=lastpost&page={}".format(
-                response.meta["fid_id"], response.meta["page"])
-            yield scrapy.Request(url=url, callback=self.get_luntan, headers=self.headers, meta=response.meta)
-            for luntan_id in luntan_id_list:
-                url = "http://www.xcar.com.cn/bbs/viewthread.php?tid={}".format(luntan_id)
+                fid_id, response.meta["page"])
+            print(url)
+            # yield scrapy.Request(url=url, callback=self.get_luntan, headers=self.headers, meta=response.meta)
+            # for luntan_id in luntan_id_list:
+            #     url = "http://www.xcar.com.cn/bbs/viewthread.php?tid={}".format(luntan_id)
+            #     print(url)
                 # valid = self.redis_tools(url)
                 # if valid == 0:
                 #     logging.log(msg="this http request is repetition", level=logging.INFO)
                 #     continue
                 # else:
-                yield scrapy.Request(url=url, callback=self.parse_luntan, headers=self.headers,
-                                         meta=response.meta)
-    #
+                # yield scrapy.Request(url=url, callback=self.parse_luntan, headers=self.headers,
+                #                          meta=response.meta)
+
     # def parse_luntan(self, response):
     #
     #     content=html.xpath('//div[@class="floor_div floor_div_e"]/div[@id="content"]/div/text()')[0]
