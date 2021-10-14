@@ -105,6 +105,7 @@ class Xcar1Spider(scrapy.Spider):
             url = "http://www.xcar.com.cn/bbs/xbbsapi/forumdisplay/get_thread_list.php?fid={}&orderby=lastpost&page={}".format(
                 fid_id, response.meta["page"])
             print(url)
+            # 1
             # yield scrapy.Request(url=url, callback=self.get_luntan, headers=self.headers, meta=response.meta)
             # for luntan_id in luntan_id_list:
             #     url = "http://www.xcar.com.cn/bbs/viewthread.php?tid={}".format(luntan_id)
